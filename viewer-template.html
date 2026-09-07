@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Bug Report Viewer</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    display: flex;
+    height: 100vh;
+    background: #0f172a;
+    color: #e2e8f0;
+  }
+  #videoPane {
+    flex: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+  }
+  video {
+    max-width: 100%;
+    max-height: 100%;
+  }
+  #logPane {
+    flex: 1;
+    overflow-y: auto;
+    border-left: 1px solid #334155;
+    padding: 8px;
+  }
+  .entry {
+    padding: 10px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    background: #1e293b;
+    cursor: pointer;
+    font-size: 13px;
+    border-left: 3px solid #64748b;
+  }
+  .entry:hover { background: #334155; }
+  .entry.active { border-left-color: #38bdf8; background: #1e3a5f; }
+  .entry .offset {
+    font-family: monospace;
+    color: #94a3b8;
+    font-size: 11px;
+  }
+  .entry .type {
+    font-weight: 600;
+    margin: 2px 0;
+  }
+  .entry.error-type .type { color: #f87171; }
+  .entry.network-type .type { color: #fbbf24; }
+  .entry .message {
+    color: #cbd5e1;
+    word-break: break-word;
+  }
+  #logPane h2 {
+    font-size: 14px;
+    color: #94a3b8;
+    margin: 4px 0 12px;
+  }
+</style>
+</head>
+<body>
+  <div id="videoPane">
+    <video id="video" src="recording.webm" controls></video>
+  </div>
+  <div id="logPane">
+    <h2 id="logCount">Captured issues</h2>
+    <div id="entries"></div>
+  </div>
+
+<script>
+  // These two are replaced with real data at export time by offscreen.js.
+  const LOGS = __LOGS_JSON__;
+  const RECORDING_START = __RECORDING_START_JSON__;
+
+  const video = document.getElementById("video");
+  const entriesEl = document.getElementById("entries");
+  document.getElementById("logCount").textContent =
+    LOGS.length + " captured issue" + (LOGS.length === 1 ? "" : "s");
+
+  function offsetSeconds(entry) {
+    if (!RECORDING_START || !entry.epoch) return null;
+    return Math.max(0, (entry.epoch - RECORDING_START) / 1000);
+  }
+
+  function formatOffset(seconds) {
+    if (seconds == null) return "--:--";
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return m + ":" + String(s).padStart(2, "0");
+  }
+
+  const rows = LOGS.map((entry, i) => {
+    const offset = offsetSeconds(entry);
+    const el = document.createElement("div");
+    const kind = entry.type.includes("network") || entry.type.includes("xhr") || entry.type.includes("fetch")
+      ? "network-type" : "error-type";
+    el.className = "entry " + kind;
+    el.dataset.offset = offset ?? "";
+    el.innerHTML =
+      '<div class="offset">' + formatOffset(offset) + "</div>" +
+      '<div class="type">' + entry.type + "</div>" +
+      '<div class="message">' + escapeHtml(entry.message || "") + "</div>";
+
+    el.addEventListener("click", () => {
+      if (offset != null) {
+        video.currentTime = offset;
+        video.play();
+      }
+    });
+
+    entriesEl.appendChild(el);
+    return { el, offset };
+  });
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // Highlight whichever entry corresponds to the current playback moment.
+  video.addEventListener("timeupdate", () => {
+    let active = null;
+    for (const row of rows) {
+      if (row.offset != null && row.offset <= video.currentTime) {
+        active = row;
+      }
+    }
+    rows.forEach((row) => row.el.classList.toggle("active", row === active));
+  });
+</script>
+</body>
+</html>
