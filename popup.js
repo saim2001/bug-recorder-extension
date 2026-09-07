@@ -17,6 +17,9 @@ function render(state) {
 async function refresh() {
   const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
   render(state);
+  if (state.error) {
+    status.textContent = `Recording stopped: ${state.error}`;
+  }
 }
 
 recordBtn.addEventListener("click", async () => {

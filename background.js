@@ -5,6 +5,7 @@
 let logs = [];
 let recording = false;
 let recordingStart = null;
+let lastError = null;
 
 // Every handler below awaits this before touching logs/recording, so a
 // freshly-woken service worker never answers with stale defaults before
@@ -14,10 +15,12 @@ const stateReady = (async () => {
     "logs",
     "recording",
     "recordingStart",
+    "lastError",
   ]);
   logs = data.logs || [];
   recording = data.recording || false;
   recordingStart = data.recordingStart || null;
+  lastError = data.lastError || null;
 })();
 
 async function saveLogs() {
@@ -54,6 +57,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "LOG_EVENT") {
       logs.push(message.entry);
       await saveLogs();
+      return;
+    }
+
+    if (message.type === "RECORDING_ERROR") {
+      await saveRecording(false);
+      lastError = message.error;
+      await chrome.storage.session.set({ lastError: message.error });
       return;
     }
 
@@ -112,7 +122,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     if (message.type === "GET_STATE") {
-      sendResponse({ recording, logCount: logs.length });
+      const errorToReport = lastError;
+      lastError = null;
+      await chrome.storage.session.set({ lastError: null });
+      sendResponse({ recording, logCount: logs.length, error: errorToReport});
       return;
     }
 

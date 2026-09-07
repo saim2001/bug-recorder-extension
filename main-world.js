@@ -19,9 +19,21 @@
 
   function safeBody(body) {
     if (body == null) return null;
-    if (typeof body === "string") return body.slice(0, 2000); // cap size
+
+    if (typeof body === "string") {
+      try {
+        // It might be a JSON string — parse, redact, re-stringify.
+        const parsed = JSON.parse(body);
+        return JSON.stringify(redactObject(parsed)).slice(0, 2000);
+      } catch {
+        // Not JSON (e.g. form-urlencoded or plain text) — can't safely
+        // redact structured fields, so just cap the size as before.
+        return body.slice(0, 2000);
+      }
+    }
+
     try {
-      return JSON.stringify(body).slice(0, 2000);
+      return JSON.stringify(redactObject(body)).slice(0, 2000);
     } catch {
       return String(body).slice(0, 2000);
     }
@@ -30,10 +42,37 @@
   function getQueryParams(url) {
     try {
       const u = new URL(url, location.origin);
-      return Object.fromEntries(u.searchParams.entries());
+      const params = Object.fromEntries(u.searchParams.entries());
+      return redactObject(params);
     } catch {
       return null;
     }
+  }
+
+  const SENSITIVE_KEYS = [
+  "password", "pass", "pwd",
+  "token", "accesstoken", "refreshtoken", "idtoken",
+  "authorization", "auth",
+  "secret", "apikey", "api_key", "api-key", "x-api-key",
+  "cookie", "session", "sessionid",
+  "ssn", "creditcard", "cardnumber", "cvv",
+  ];
+
+  function isSensitiveKey(key) {
+    const normalized = key.toLowerCase().replace(/[_-]/g, "");
+    return SENSITIVE_KEYS.some((k) => normalized.includes(k));
+  }
+
+  function redactObject(obj) {
+    if (Array.isArray(obj)) return obj.map(redactObject);
+    if (obj !== null && typeof obj === "object") {
+      const result = {};
+      for (const [key, value] of Object.entries(obj)) {
+        result[key] = isSensitiveKey(key) ? "[REDACTED]" : redactObject(value);
+      }
+      return result;
+    }
+    return obj;
   }
 
   // 1. Catch console.error / console.warn
@@ -84,7 +123,12 @@
         try {
           // .clone() is required — a Response body can only be read once,
           // and the caller still needs to read the original.
-          responseBody = (await response.clone().text()).slice(0, 2000);
+          const rawText = await response.clone().text();
+          try {
+            responseBody = JSON.stringify(redactObject(JSON.parse(rawText))).slice(0, 2000);
+          } catch {
+            responseBody = rawText.slice(0, 2000); // not JSON, leave as-is
+          }
         } catch {
           // Some responses (opaque cross-origin, streams already used
           // elsewhere) can't be read here — fail silently, don't break the app.
@@ -131,7 +175,12 @@
         let responseBody = null;
         try {
           // responseText throws if responseType is "blob"/"arraybuffer"
-          responseBody = this.responseText?.slice(0, 2000);
+          try {
+                responseBody = JSON.stringify(redactObject(JSON.parse(this.responseText))).slice(0, 2000);
+              } 
+          catch {
+                responseBody = this.responseText?.slice(0, 2000);
+              }
         } catch {}
 
         const isNetworkError = this.status === 0;

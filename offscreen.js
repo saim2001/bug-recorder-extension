@@ -15,50 +15,67 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 async function startRecording(streamId) {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: {
-      mandatory: {
-        chromeMediaSource: "tab",
-        chromeMediaSourceId: streamId,
+  try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        mandatory: {
+          chromeMediaSource: "tab",
+          chromeMediaSourceId: streamId,
+        },
       },
-    },
-    video: {
-      mandatory: {
-        chromeMediaSource: "tab",
-        chromeMediaSourceId: streamId,
-        maxWidth: 1920,
-        maxHeight: 1080,
-        maxFrameRate: 30,
+      video: {
+        mandatory: {
+          chromeMediaSource: "tab",
+          chromeMediaSourceId: streamId,
+          maxWidth: 1920,
+          maxHeight: 1080,
+          maxFrameRate: 30,
+        },
       },
-    },
-  });
+    });
 
-  // Also play the audio back out so the user doesn't lose tab sound
-  // while recording (capturing it mutes the original tab otherwise).
-  const audioContext = new AudioContext();
-  const source = audioContext.createMediaStreamSource(stream);
-  source.connect(audioContext.destination);
+    // If the tab being recorded gets closed, or the underlying stream
+    // otherwise dies, this fires — without it, recording would be stuck
+    // "in progress" forever with no video ever finishing.
+    stream.getVideoTracks()[0].addEventListener("ended", () => {
+      stopRecording();
+      chrome.runtime.sendMessage({ type: "STOP_RECORDING" });
+    });
 
-  chunks = [];
-  mediaRecorder = new MediaRecorder(stream, {
-    mimeType: "video/webm;codecs=vp8,opus",
-  });
+    // Also play the audio back out so the user doesn't lose tab sound
+    // while recording (capturing it mutes the original tab otherwise).
+    const audioContext = new AudioContext();
+    const source = audioContext.createMediaStreamSource(stream);
+    source.connect(audioContext.destination);
 
-  mediaRecorder.ondataavailable = (e) => {
-    if (e.data.size > 0) chunks.push(e.data);
-  };
+    chunks = [];
+    mediaRecorder = new MediaRecorder(stream, {
+      mimeType: "video/webm;codecs=vp8,opus",
+    });
 
-  mediaRecorder.onstop = () => {
-    stream.getTracks().forEach((track) => track.stop());
-    downloadRecording();
-  };
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
 
-  mediaRecorder.start();
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach((track) => track.stop());
+      downloadRecording();
+    };
 
-  chrome.runtime.sendMessage({
-    type: "RECORDING_STARTED",
-    epoch: Date.now(),
-  });
+    mediaRecorder.start();
+
+    chrome.runtime.sendMessage({
+      type: "RECORDING_STARTED",
+      epoch: Date.now(),
+    });
+
+  }
+  catch (err) {
+    chrome.runtime.sendMessage({
+      type: "RECORDING_ERROR",
+      error: err.message,
+    });
+  }
 }
 
 function stopRecording() {
