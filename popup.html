@@ -28,9 +28,23 @@
   </style>
 </head>
 <body>
-  <button id="recordBtn">● Start Recording</button>
-  <button id="stopBtn">■ Stop & Export</button>
-  <div id="status">Idle</div>
+  <div id="licenseView">
+    <p style="font-size:13px; color:#94a3b8; margin-bottom:8px;">
+      Enter your license key to activate.
+    </p>
+    <input id="licenseInput" type="text" placeholder="License key"
+      style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:8px; border-radius:6px; border:1px solid #334155;" />
+    <button id="activateBtn" style="background:#2563eb;">Activate</button>
+    <div id="licenseStatus" style="margin-top:10px; font-size:12px; color:#64748b;"></div>
+  </div>
+
+  <div id="appView" style="display:none;">
+    <button id="recordBtn">● Start Recording</button>
+    <button id="stopBtn">■ Stop & Export</button>
+    <div id="status">Idle</div>
+    <a href="#" id="deactivateLink" style="display:block; margin-top:12px; font-size:11px; color:#64748b;">Deactivate on this device</a>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>

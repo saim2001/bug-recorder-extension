@@ -51,7 +51,7 @@
 
   const SENSITIVE_KEYS = [
   "password", "pass", "pwd",
-  "token", "accesstoken", "refreshtoken", "idtoken",
+  "token", "accesstoken", "refreshtoken", "idtoken","access_token",
   "authorization", "auth",
   "secret", "apikey", "api_key", "api-key", "x-api-key",
   "cookie", "session", "sessionid",

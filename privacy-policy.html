@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Privacy Policy — Bug Report Recorder</title>
+<style>
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    max-width: 720px;
+    margin: 40px auto;
+    padding: 0 20px;
+    line-height: 1.6;
+    color: #1e293b;
+  }
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  .updated { color: #64748b; font-size: 14px; margin-bottom: 32px; }
+  h2 { font-size: 19px; margin-top: 36px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
+  ul { padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  .highlight {
+    background: #f0fdf4;
+    border-left: 3px solid #22c55e;
+    padding: 12px 16px;
+    margin: 20px 0;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Privacy Policy — Bug Report Recorder</h1>
+<p class="updated">Last updated: September 2026</p>
+
+<p>
+  Bug Report Recorder is a browser extension that helps developers capture
+  screen recordings, console errors, and failed network requests to create
+  shareable bug reports. This policy explains exactly what the extension
+  captures, where that data goes, and what control you have over it.
+</p>
+
+<div class="highlight">
+  <strong>In short:</strong> everything the extension captures stays on your
+  own device. Nothing is uploaded to us, or to any third party, unless you
+  personally choose to share an exported file with someone.
+</div>
+
+<h2>What the extension captures</h2>
+<p>While you are actively recording, the extension captures:</p>
+<ul>
+  <li><strong>Screen recording</strong> of the browser tab you choose to record, including any audio playing in that tab.</li>
+  <li><strong>Console errors and warnings</strong> logged by the page.</li>
+  <li><strong>Uncaught JavaScript exceptions</strong> and unhandled promise rejections.</li>
+  <li><strong>Failed network requests</strong> (via <code>fetch</code> and <code>XMLHttpRequest</code>), including the request URL, query parameters, request payload, and response body, for requests that fail or return an error status.</li>
+</ul>
+<p>
+  The extension only captures this information while you have actively
+  started a recording. It does not run in the background, and does not
+  monitor your browsing when a recording is not in progress.
+</p>
+
+<h2>Automatic redaction of sensitive data</h2>
+<p>
+  Before any request payload, query parameter, or response body is stored,
+  the extension automatically scans for common sensitive field names —
+  such as <code>password</code>, <code>token</code>, <code>apiKey</code>,
+  <code>authorization</code>, <code>cookie</code>, and similar — and
+  replaces their values with <code>[REDACTED]</code>. This reduces, but
+  does not guarantee elimination of, sensitive data appearing in a report;
+  see "Your responsibility when sharing reports" below.
+</p>
+
+<h2>Where your data is stored</h2>
+<ul>
+  <li>Captured logs are held temporarily in the extension's local browser storage while a recording is in progress.</li>
+  <li>When you stop recording, the video, logs, and a viewer page are bundled into a single <code>.zip</code> file and downloaded directly to your own device, using your browser's normal download mechanism.</li>
+  <li>We do not operate any server that receives, stores, or has access to your recordings, logs, or any captured data. Nothing described above is transmitted anywhere by the extension.</li>
+</ul>
+
+<h2>Data related to your license</h2>
+<p>
+  If you purchase Bug Report Recorder, license validation is handled by
+  our payment processor, <strong>Lemon Squeezy</strong> (acting as merchant
+  of record). The extension sends your license key to Lemon Squeezy's
+  License API solely to confirm it is valid and to manage device
+  activations. This is the only data the extension transmits over the
+  network on its own initiative. See
+  <a href="https://www.lemonsqueezy.com/privacy" target="_blank" rel="noopener">Lemon Squeezy's privacy policy</a>
+  for how they handle payment and license data.
+</p>
+
+<h2>Your responsibility when sharing reports</h2>
+<p>
+  Exported bug reports may still contain sensitive information that our
+  automatic redaction does not catch — for example, personal data visible
+  on screen during the recording, or content in an unusual field name we
+  don't recognize. Please review an exported report before sharing it
+  with others, particularly outside your own team or organization.
+</p>
+
+<h2>Permissions the extension requests</h2>
+<ul>
+  <li><strong>activeTab / tabCapture</strong> — required to record the tab you choose.</li>
+  <li><strong>scripting</strong> — required to inject the scripts that capture console errors and network requests.</li>
+  <li><strong>storage</strong> — required to temporarily hold recording state and your license activation locally.</li>
+  <li><strong>offscreen</strong> — required by Chrome's architecture to perform the actual recording.</li>
+  <li><strong>host permissions (all sites)</strong> — required so the extension can capture errors on whichever site you choose to record; it does not act on any site unless you start a recording.</li>
+</ul>
+
+<h2>Children's privacy</h2>
+<p>
+  Bug Report Recorder is a developer tool not directed at children, and we
+  do not knowingly collect data from children.
+</p>
+
+<h2>Changes to this policy</h2>
+<p>
+  If this policy changes, we will update the "Last updated" date at the
+  top of this page.
+</p>
+
+<h2>Contact</h2>
+<p>
+  Questions about this policy or how the extension handles data can be
+  sent to: <strong>[YOUR CONTACT EMAIL HERE]</strong>
+</p>
+
+</body>
+</html>
